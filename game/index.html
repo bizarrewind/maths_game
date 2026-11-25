@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOOYAH! — Math Chaos (Grades 7–10)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="confettiCanvas"></canvas>
+  <canvas id="fxCanvas"></canvas>
+  <div id="vortexOverlay" class="vortex-overlay hidden">
+    <div class="vortex-icon">🌪️</div>
+    <div class="vortex-label">TORNADO SCRAMBLE!</div>
+  </div>
+
+  <div class="app-shell">
+    <!-- Collapsible Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">🔥</div>
+        <div class="brand-text">
+          <h1>BOOYAH!</h1>
+          <p>Math Chaos • Gr. 7</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Main Tabs">
+        <button class="nav-tab active" data-tab="board" type="button">
+          <span class="nav-icon">🎮</span>
+          <span class="nav-label">Play Board</span>
+        </button>
+        <button class="nav-tab" data-tab="decks" type="button">
+          <span class="nav-icon">📝</span>
+          <span class="nav-label">Decks &amp; Builder</span>
+        </button>
+        <button class="nav-tab" data-tab="rivalry" type="button">
+          <span class="nav-icon">🏆</span>
+          <span class="nav-label">Season Rivalry</span>
+        </button>
+        <button class="nav-tab" data-tab="setup" type="button">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Match Setup</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div id="syncPill" class="sync-pill" title="Networked multi-day storage status">
+          <span>🟡</span>
+          <span class="sync-text">Connecting...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="main-wrap">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="toggleSidebarBtn" class="btn btn-ghost btn-sm" type="button" title="Collapse/Expand Sidebar">☰</button>
+          <div id="topbarTitle" class="topbar-title">🎮 Play Board</div>
+        </div>
+        <div class="topbar-actions">
+          <button id="muteBtn" class="btn btn-ghost btn-sm" type="button">🔊 Sound</button>
+          <button id="endGameBtn" class="btn btn-ghost btn-sm" type="button">🏆 End &amp; Save Match</button>
+          <button id="quickSetupBtn" class="btn btn-primary btn-sm" type="button">⚙️ Match Setup</button>
+        </div>
+      </header>
+
+      <!-- TAB 1: PLAY BOARD -->
+      <section id="tab-board" class="tab-panel">
+        <div id="scoreboard" class="scoreboard" aria-label="Squad Scoreboard"></div>
+
+        <div id="boardControls" class="command-dock">
+          <div class="turn-callout">
+            <div class="turn-label-row">
+              <span class="turn-dot"></span>
+              <span id="activeGroupLabel">🦁 Team Lions' Turn</span>
+              <span id="finalePill" class="finale-pill hidden">⚡ Sudden Death Finale (+2 Bonus!)</span>
+            </div>
+            <div class="turn-sub">
+              <span id="tilesRemaining">20 / 20 tiles left</span> • Pick any tile or hit Spin Random!
+            </div>
+          </div>
+
+          <div class="dock-actions">
+            <button id="riskItBtn" class="btn btn-risk" type="button" title="Wager -2 pts if wrong, draw 2 mystery cards if right!">
+              🔥 Risk It! (1 left)
+            </button>
+            <button id="randomTileBtn" class="btn btn-primary btn-hero btn-shimmer" type="button">
+              🎲 SPIN RANDOM TILE
+            </button>
+          </div>
+        </div>
+
+        <div id="tileGrid" class="tile-grid" aria-label="Numbered Question Tiles"></div>
+      </section>
+
+      <!-- TAB 2: GOOGLE-FORMS-STYLE DECKS & BUILDER -->
+      <section id="tab-decks" class="tab-panel hidden">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2>📝 Deck &amp; Question Builder</h2>
+              <p style="color:var(--muted); font-size:0.9rem;">Edit any deck inline like Google Forms, or paste plain text questions—no JSON needed.</p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button id="newDeckBtn" class="btn btn-primary" type="button">＋ New Custom Deck</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>All Decks</h3>
+              <span id="deckSaveIndicator" style="font-size:0.78rem; color:var(--emerald); font-weight:800;"></span>
+            </div>
+            <div id="builderGradePills" class="cat-pills" style="gap:5px;">
+              <button class="cat-pill active" data-bgrade="Grade 7" type="button">Gr 7</button>
+              <button class="cat-pill" data-bgrade="Grade 6" type="button">Gr 6</button>
+              <button class="cat-pill" data-bgrade="Grade 8" type="button">Gr 8</button>
+              <button class="cat-pill" data-bgrade="Grade 9" type="button">Gr 9</button>
+              <button class="cat-pill" data-bgrade="Grade 10" type="button">Gr 10</button>
+              <button class="cat-pill" data-bgrade="Custom" type="button">★</button>
+              <button class="cat-pill" data-bgrade="ALL" type="button">All</button>
+            </div>
+            <div id="deckList" class="deck-list"></div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; padding-top:8px; border-top:1px solid var(--border);">
+              <button id="exportDecksBtn" class="btn btn-ghost btn-sm" type="button" title="Advanced backup">⬇️ JSON Backup</button>
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer;" title="Restore JSON backup">
+                ⬆️ Restore JSON
+                <input id="importDecksInput" type="file" accept=".json,application/json" class="hidden" />
+              </label>
+            </div>
+          </div>
+
+          <div id="gfEditorPane" class="gf-stack"></div>
+        </div>
+      </section>
+
+      <!-- TAB 3: MULTI-DAY SEASON RIVALRY -->
+      <section id="tab-rivalry" class="tab-panel hidden">
+        <div id="rivalryBanner" class="rivalry-banner">
+          <span id="rivalryCallout">🔥 Play matches and click "End &amp; Save Match" to build class rivalries!</span>
+          <button id="resetSeasonBtn" class="btn btn-danger btn-sm" type="button">🗑️ Reset Season</button>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2>🏆 Multi-Day Class Standings</h2>
+              <p id="seasonMeta" style="color:var(--muted); font-size:0.88rem;">0 matches recorded</p>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="rivalry-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Squad</th>
+                  <th>Season Pts</th>
+                  <th>Wins 🥇</th>
+                  <th>Solved ✓</th>
+                  <th>Steals 🥷</th>
+                </tr>
+              </thead>
+              <tbody id="rivalryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <h3>📜 Recent Match Log</h3>
+          <div id="matchHistoryList" class="history-list"></div>
+        </div>
+      </section>
+
+      <!-- TAB 4: MATCH SETUP -->
+      <section id="tab-setup" class="tab-panel hidden">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2>⚙️ Match Setup</h2>
+              <p style="color:var(--muted); font-size:0.88rem;">Add any number of teams, pick chapters fast, and choose difficulty scaling.</p>
+            </div>
+            <button id="startMatchBtn" class="btn btn-primary btn-hero btn-shimmer" type="button">🚀 START MATCH</button>
+          </div>
+
+          <!-- Dynamic Team Builder -->
+          <div class="team-builder-bar">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <strong>👥 Squads (<span id="teamCountBadge">4</span>)</strong>
+              <span style="color:var(--muted); font-size:0.84rem;">Type in the empty box to spawn more teams, or generate random names!</span>
+            </div>
+            <div class="team-gen-controls">
+              <label for="randomTeamCount" style="font-size:0.84rem; color:var(--muted); font-weight:700;">Teams:</label>
+              <input id="randomTeamCount" class="team-count-input" type="number" min="2" max="12" value="4" />
+              <button id="generateTeamsBtn" class="btn btn-ghost btn-sm" type="button">🎲 Generate Random Teams</button>
+            </div>
+          </div>
+
+          <div id="setupTeamRows" class="team-rows"></div>
+
+          <!-- Match Rules -->
+          <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="form-field">
+              <label for="tileCount">Number of Tiles</label>
+              <select id="tileCount">
+                <option value="16">16 Tiles (4 × 4)</option>
+                <option value="20" selected>20 Tiles (5 × 4)</option>
+                <option value="24">24 Tiles (6 × 4)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="difficultyMode">Difficulty Mode</label>
+              <select id="difficultyMode">
+                <option value="adaptive" selected>🎯 Smart Adaptive (SAT + Scaling)</option>
+                <option value="progressive">📈 Scaling Only (Easy → Medium → Hard)</option>
+                <option value="mixed">🎲 Mixed Random</option>
+                <option value="easy">🟢 Easy Only</option>
+                <option value="medium">🟡 Medium Only</option>
+                <option value="hard">🔴 Hard Only</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="timerSelect">Question Timer</label>
+              <select id="timerSelect">
+                <option value="0" selected>No Timer</option>
+                <option value="30">30 Seconds</option>
+                <option value="45">45 Seconds</option>
+                <option value="60">60 Seconds</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Smart Chapter & Deck Picker -->
+          <div class="form-field full" style="gap:10px;">
+            <div class="deck-picker-toolbar">
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <label style="font-size:0.95rem; color:var(--text);">📚 Pick Chapters / Decks</label>
+                <span id="deckSummaryBadge" class="badge">21 decks • 420 questions ready</span>
+              </div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button id="selectVisibleDecksBtn" class="btn btn-ghost btn-sm" type="button">✓ Select Shown</button>
+                <button id="clearDecksBtn" class="btn btn-ghost btn-sm" type="button">Clear All</button>
+              </div>
+            </div>
+
+            <div class="deck-picker-toolbar">
+              <input id="deckSearchInput" class="deck-search-input" type="search" placeholder="🔍 Search chapter or deck (e.g. Profit, Set, Algebra, 7M07)..." />
+              <div id="deckCatPills" class="cat-pills">
+                <button class="cat-pill active" data-cat="Grade 7" type="button">Grade 7</button>
+                <button class="cat-pill" data-cat="Grade 6" type="button">Grade 6</button>
+                <button class="cat-pill" data-cat="Grade 8" type="button">Grade 8</button>
+                <button class="cat-pill" data-cat="Grade 9" type="button">Grade 9</button>
+                <button class="cat-pill" data-cat="Grade 10" type="button">Grade 10</button>
+                <button class="cat-pill" data-cat="Custom" type="button">★ Custom</button>
+                <button class="cat-pill" data-cat="ALL" type="button">All</button>
+              </div>
+            </div>
+
+            <div id="setupDeckGrid" class="deck-picker-grid"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Question Modal -->
+  <div id="questionModal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <span id="qChapterBadge" class="badge">Tile #1</span>
+          <span id="qDifficultyBadge" class="diff-badge easy">🟢 Easy</span>
+          <span id="qStakesBadge" class="badge badge-stakes hidden">🔥 HIGH STAKES</span>
+        </div>
+        <div class="header-right">
+          <button id="qHintBtn" class="btn btn-ghost btn-sm" type="button" title="Reveal formula clue (costs 1 pt if you have points)">💡 Hint (−1 pt)</button>
+          <button id="toggleScratchBtn" class="btn btn-ghost btn-sm" type="button">✏️ Scratchpad</button>
+          <span id="qTimer" class="timer-pill hidden">⏱️ 30s</span>
+          <button id="closeQuestionModalBtn" class="modal-close" type="button" title="Close">✕</button>
+        </div>
+      </div>
+
+      <div id="qTimerBarTrack" class="timer-bar-track hidden">
+        <div id="qTimerBarFill" class="timer-bar-fill"></div>
+      </div>
+
+      <div id="activeSolverBar" class="active-solver-bar">
+        <span id="solverLabel">Answering: 🦁 Team Lions</span>
+        <span id="solverHint"></span>
+      </div>
+
+      <div id="qDiagramBox" class="math-diagram-box hidden"></div>
+      <div id="qText" class="question-text"></div>
+      <div id="qHintBox" class="hint-box hidden"></div>
+
+      <div id="scratchpadWrap" class="scratchpad-wrap hidden">
+        <div class="scratchpad-bar">
+          <span>✏️ Smartboard Rough Work</span>
+          <button id="clearScratchBtn" class="btn btn-ghost btn-sm" type="button" style="min-height:28px; padding:3px 10px;">Clear</button>
+        </div>
+        <canvas id="scratchCanvas"></canvas>
+      </div>
+
+      <div id="qOptions" class="options-grid"></div>
+
+      <div id="reboundPanel" class="rebound-panel hidden">
+        <div id="reboundTitle" class="rebound-title">❌ Wrong!</div>
+        <div id="reboundGroups" class="rebound-groups"></div>
+      </div>
+
+      <div id="qExplanation" class="explanation-box hidden"></div>
+
+      <div id="qVictoryOverlay" class="victory-overlay hidden">
+        <div id="qVictoryBadge" class="victory-stamp">🎉 BRILLIANT!</div>
+        <div id="qVictorySub" class="victory-sub"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="qRevealSkipBtn" class="btn btn-ghost hidden" type="button">👀 Show Solution &amp; Move On</button>
+        <button id="qNextBtn" class="btn btn-primary hidden" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 Mystery Reward Cards Modal -->
+  <div id="rewardModal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="rewardTitle">🎁 Pick Your Mystery Card!</h2>
+        <div class="header-right">
+          <span id="drawsLeftBadge" class="badge hidden">2 Draws Left!</span>
+          <button id="closeRewardModalBtn" class="modal-close" type="button" title="Close">✕</button>
+        </div>
+      </div>
+      <p id="rewardSubtitle" style="color: var(--muted); font-weight: 700;"></p>
+      <div id="cardsRow" class="cards-row"></div>
+      <div id="tauntBanner" class="taunt-banner hidden"></div>
+
+      <div id="greedPanel" class="slot-machine hidden">
+        <div class="slot-marquee">
+          <span class="slot-title">🎰 2× OR BUST!</span>
+          <span id="slotPayoutPill" class="slot-payout-pill">+2 → 💎 +4 / 💀 0</span>
+        </div>
+        <div class="slot-reels">
+          <div id="slotReel0" class="slot-reel">💎</div>
+          <div id="slotReel1" class="slot-reel">💎</div>
+          <div id="slotReel2" class="slot-reel">💎</div>
+        </div>
+        <div class="greed-actions">
+          <button id="greedCashBtn" class="btn btn-emerald" type="button">💰 KEEP SAFE</button>
+          <button id="greedSpinBtn" class="btn btn-primary btn-hero btn-shimmer" type="button">🎰 SPIN 2×!</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="rewardContinueBtn" class="btn btn-emerald hidden" type="button">Next Squad →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Target Picker Modal (Steal or Swap) -->
+  <div id="targetModal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="targetTitle">🥷 Steal Points!</h2>
+        <button id="closeTargetModalBtn" class="modal-close" type="button" title="Close">✕</button>
+      </div>
+      <p id="targetPrompt" style="color: var(--muted); font-weight: 700;"></p>
+      <div id="targetList" class="steal-targets"></div>
+    </div>
+  </div>
+
+  <!-- Plaintext Bulk Add Modal (For Non-JSON Teachers) -->
+  <div id="plaintextModal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>📋 Paste Plaintext Questions</h2>
+        <button id="closePlaintextBtn" class="modal-close" type="button" title="Close">✕</button>
+      </div>
+      <p style="color:var(--muted); font-size:0.9rem; margin-bottom:12px;">
+        Type or paste questions from Word, Docs, or Notes. Mark the right option with <strong>*</strong>, <strong>(correct)</strong>, or add an <strong>Answer: B</strong> line!
+      </p>
+      <div class="form-grid">
+        <div class="form-field full">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label for="plaintextInput">Plaintext Questions</label>
+            <button id="fillSamplePlaintextBtn" class="btn btn-ghost btn-sm" type="button">✨ Load Example</button>
+          </div>
+          <textarea id="plaintextInput" rows="9" placeholder="Q: What is 15% of 200?
+A) 20
+B) 30 *
+C) 25
+D) 35
+Explain: 0.15 × 200 = 30
+
+Q: Solve 2x + 4 = 10
+A) 2
+B) 3
+C) 4
+D) 5
+Answer: B"></textarea>
+        </div>
+        <div class="form-field full">
+          <label id="plaintextPreviewCount">Live Preview (0 questions detected)</label>
+          <div id="plaintextPreview" class="plaintext-preview">
+            <span style="color:var(--muted);">Start typing or click "Load Example" to preview parsed questions...</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="margin-top:16px;">
+        <button id="cancelPlaintextBtn" class="btn btn-ghost" type="button">Cancel</button>
+        <button id="importPlaintextConfirmBtn" class="btn btn-primary" type="button" disabled>➕ Add Questions to Deck</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Podium Modal -->
+  <div id="gameOverModal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>🏆 Match Results!</h2>
+        <button id="closeGameOverBtn" class="modal-close" type="button" title="Close">✕</button>
+      </div>
+      <div id="podiumList" class="podium-list"></div>
+      <p id="savedMatchNote" style="color:var(--muted); font-size:0.9rem; font-weight:700; margin-bottom:14px;"></p>
+      <div class="modal-footer">
+        <button id="viewRivalryBtn" class="btn btn-ghost" type="button">🏆 View Season Rivalry</button>
+        <button id="playAgainBtn" class="btn btn-primary" type="button">Play Again 🔥</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="questions.js"></script>
+  <script src="math-visuals.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

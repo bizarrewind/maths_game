@@ -1,0 +1,9 @@
+# Downloaded textbook PDFs (run scrape_looma_books.py to download)
+books/
+
+# Local runtime & deployment caches
+game/data/
+game/.vercel/
+.env*
+__pycache__/
+*.pyc
